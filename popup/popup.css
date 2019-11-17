@@ -1,14 +1,18 @@
-.french_word_popup{
-    background: red;
-    width:800px;
-    top: 50%;
-    left: 50%;
-    margin-left: -400px;
-    margin-top: -40px;
-    position: fixed;   
-    z-index:99999;
+.french_word_popup {
+  background: red;
+  width: 800px;
+  top: 50%;
+  left: 50%;
+  margin-left: -400px;
+  margin-top: -40px;
+  position: fixed;
+  z-index: 99999;
 }
 
-#sendWord_form_cancel{
-    cursor: pointer;
+#sendWord_form_cancel {
+  cursor: pointer;
+}
+
+#sendWord_form {
+  padding: 30px;
 }
