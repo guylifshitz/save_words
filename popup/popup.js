@@ -10,7 +10,7 @@
  *          - Make code prettier
  *          - Add source site as parameter
  *          - Make text fields larger so can read.
- *          - Filter the example sentence to only 1 sentence, not full paragaraph. 
+ *          - Filter the example sentence to only 1 sentence, not full paragaraph.
  */
 
 var word = window.getSelection();
@@ -29,15 +29,16 @@ form_html = `<form id="sendWord_form">
   <br>
   Word:
   <br>
-  <input type="text" name="word" value="${word}" id="word_word">
+  <input type="text" name="word" value="${word}" id="save_form_word">
+  <input type="button" id="save_form_search" value="Get definition">  
   <br>
   Example:
   <br>
-  <input type="text" name="example" value="${sentence}">
+  <textarea name="example" id="save_form_example">${sentence}</textarea>
   <br><br>
   Definiton:
   <br>
-  <input type="text" name="definition" value="ENTER HERE" id="word_definiton">
+  <textarea name="definition" value="ENTER HERE" id="save_form_definition"></textarea>
   <br><br>
   <div id="save_word_definitions">...</div>
   <br><br>
@@ -48,54 +49,61 @@ form_html = `<form id="sendWord_form">
 popup_title.innerHTML = form_html;
 
 // API: Get word definitions
-var api_word_definition_request = new XMLHttpRequest();
-api_word_definition_request.open(
-  "GET",
-  `http://localhost:8000/api/words/?q=${word}`,
-  true
-);
-api_word_definition_request.onload = function() {
-  var data = JSON.parse(this.response);
-  var definition_html = "<ol>";
-  if (
-    api_word_definition_request.status >= 200 &&
-    api_word_definition_request.status < 400
-  ) {
-    data["results"].forEach(result => {
-      result["poses"].forEach(part_of_speech => {
-        part_of_speech["definitions"].forEach(definition => {
-          var definition_text = definition["definition_txt"];
-          definition_html = definition_html + `<li>${definition_text}</li>`;
+function get_definition(search_word) {
+  var api_word_definition_request = new XMLHttpRequest();
+  api_word_definition_request.open(
+    "GET",
+    `http://guylifshitz.com:8000/api/words/?q=${search_word}`,
+    true
+  );
+  api_word_definition_request.onload = function() {
+    var data = JSON.parse(this.response);
+    var definition_html = "<ol>";
+    if (
+      api_word_definition_request.status >= 200 &&
+      api_word_definition_request.status < 400
+    ) {
+      data["results"].forEach(result => {
+        result["poses"].forEach(part_of_speech => {
+          part_of_speech["definitions"].forEach(definition => {
+            var definition_text = definition["definition_txt"];
+            definition_html = definition_html + `<li>${definition_text}</li>`;
+          });
         });
       });
-    });
-    document.querySelector(
-      "#save_word_definitions"
-    ).innerHTML = definition_html;
-  } else {
-    console.log("ERROR");
-  }
-  definition_html = definition_html + "</ul>";
-};
-api_word_definition_request.send();
+      document.querySelector(
+        "#save_word_definitions"
+      ).innerHTML = definition_html;
+    } else {
+      console.log("ERROR");
+    }
+    definition_html = definition_html + "</ul>";
+  };
+  api_word_definition_request.send();
+}
 
-// INPUT: cancel (hide popup)
-document
-  .querySelector("#sendWord_form_cancel")
-  .addEventListener("click", function(e) {
-    document.body.removeChild(popup);
-  });
+get_definition(word);
 
 // INPUT: Send (save to google form, if fail show alert, hide popup)
+function clean_word(phrase)
+{
+  var clean = phrase.replace(/\%/g, '')
+  return clean;
+}
 document
   .querySelector("#sendWord_form")
   .addEventListener("submit", function(e) {
     e.preventDefault();
 
-    var definition = document.getElementById("word_definiton").value;
-    var word_txt = document.getElementById("word_word").value;
+    var definition = document.getElementById("save_form_definition").value;
+    definition = clean_word(definition);
 
-    var url = `https://docs.google.com/forms/d/e/1FAIpQLSdrJIcpHubmuG_RVvaePXaY--V2S52McKI6me5BrAOaqMU7TA/formResponse?entry.318015364=${word_txt}&entry.1975522348=&entry.1571542855=&entry.1852938782=${definition}&entry.376664097=${sentence}}&entry.695391719=&submit=Submit`;
+    var example_sentence = document.getElementById("save_form_example").value;
+    example_sentence = clean_word(example_sentence);
+
+    var word_txt = document.getElementById("save_form_word").value;
+
+    var url = `https://docs.google.com/forms/d/e/1FAIpQLSdrJIcpHubmuG_RVvaePXaY--V2S52McKI6me5BrAOaqMU7TA/formResponse?entry.318015364=${word_txt}&entry.1975522348=&entry.1571542855=&entry.1852938782=${definition}&entry.376664097=${example_sentence}&entry.695391719=&submit=Submit`;
     console.log(url);
 
     function reqListener() {
@@ -126,7 +134,16 @@ document
 
 // INPUT: Cancel
 document
-.querySelector("#sendWord_form_cancel")
-.addEventListener("click", function(e) {
-  document.body.removeChild(popup);
-});
+  .querySelector("#sendWord_form_cancel")
+  .addEventListener("click", function(e) {
+    document.body.removeChild(popup);
+  });
+
+// INPUT get a new definiton.
+document.querySelector("#save_form_search").addEventListener(
+  "click",
+  function() {
+    get_definition(document.getElementById("save_form_word").value);
+  },
+  false
+);
